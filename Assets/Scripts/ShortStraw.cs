@@ -15,14 +15,15 @@ namespace DrawPOC1 {
             List<Vector3> corners = new List<Vector3>();
             if (pList.Count == 0 || pList.Count < 2) {
                 return corners;
-            } else {
-                float rSpacing = getResamplingSpacing(pList);
-                List<Vector3> rPoints = resamplePoints(pList, rSpacing);
-                List<int> idx = getCornerIdx(rPoints);
-                foreach (int i in idx) {
-                    corners.Add(rPoints[i]);
-                }
+            } 
+
+            float rSpacing = getResamplingSpacing(pList);
+            List<Vector3> rPoints = resamplePoints(pList, rSpacing);
+            List<int> idx = getCornerIdx(rPoints);
+            foreach (int i in idx) {
+                corners.Add(rPoints[i]);
             }
+
             return corners;
         }
 
@@ -108,7 +109,7 @@ namespace DrawPOC1 {
             }
 
             // determine a threshold value in order to eliminate longer straws
-            float t = QuickMedian.Median(straws) * MEDIAN_THRESHOLD;
+            float t = QuickMedian.Median(new List<float>(straws)) * MEDIAN_THRESHOLD;
 
             // collect the point indeces corresponding to the shortest straws
             // in each region
@@ -150,6 +151,7 @@ namespace DrawPOC1 {
         private static List<int> postProcessCorners(List<Vector3> rPoints, List<int> corners, List<float> straws) {
             bool cont = false;
 
+            // account for "corners" along curved paths
             while (!cont) {
                 cont = true;
                 for (int i = 1; i < corners.Count; i++) {
@@ -168,6 +170,8 @@ namespace DrawPOC1 {
                 }
             }
 
+            // remove any corner points found in a line between
+            // two other corners
             for (int i = 1; i < (corners.Count - 1); i++) {
                 int c1 = corners[i - 1];
                 int c2 = corners[i + 1];
