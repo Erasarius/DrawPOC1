@@ -11,8 +11,6 @@ namespace DrawPOC1 {
 
         [Test]
         public void getBoundingBoxTest() {
-            ShortStraw shortStraw = new ShortStraw();
-
             List<Vector3> pList = new List<Vector3> {
                 new Vector3(-1.0F, 0.0F),
                 new Vector3(1.0F, 0.0F),
@@ -20,7 +18,7 @@ namespace DrawPOC1 {
                 new Vector3(0.0F, -2.0F)
             };
 
-            Vector3[] box = shortStraw.getBoundingBox(pList);
+            Vector3[] box = ShortStraw.getBoundingBox(pList);
             Assert.AreEqual(box[0].x, -1.0F);
             Assert.AreEqual(box[0].y, 2.0F);
             Assert.AreEqual(box[1].x, 1.0F);
@@ -29,8 +27,6 @@ namespace DrawPOC1 {
 
         [Test]
         public void getResampleSpacingTest() {
-            ShortStraw shortStraw = new ShortStraw();
-
             List<Vector3> pList = new List<Vector3> {
                 new Vector3(-1.0F, 0.0F),
                 new Vector3(2.0F, 0.0F),
@@ -38,7 +34,7 @@ namespace DrawPOC1 {
                 new Vector3(0.0F, -2.0F)
             };
 
-            float spacing = shortStraw.getResamplingSpacing(pList);
+            float spacing = ShortStraw.getResamplingSpacing(pList);
             Assert.AreEqual(spacing, 5.0F / 40.0F);
         }
 
