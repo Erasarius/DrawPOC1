@@ -9,12 +9,14 @@ using System.Collections.Generic;
 namespace DrawPOC1 {
 
     public class DrawLine : MonoBehaviour {
-        private LineRenderer line;
+        [SerializeField] private LineRenderer line;
         private bool isMousePressed;
         private List<Vector3> pointsList;
         private Vector3 mousePos;
         //List<Vector3> corners;
         List<GameObject> marks;
+       // private Color lineColor = Color.red;
+
 
         // Structure for line points
         struct myLine {
@@ -25,12 +27,16 @@ namespace DrawPOC1 {
         void Awake() {
             // Create line renderer component and set its property
             float width = 0.05f;
-            line = gameObject.AddComponent<LineRenderer>();
-            line.material = new Material(Shader.Find("Particles/Additive"));
-            line.SetVertexCount(0);
+            line = gameObject.GetComponent<LineRenderer>();
+            //line.material = new Material(Shader.Find("Particles/Additive"));
+            //line.material = new Material(Shader.Find("Sprites/NewSurfaceShader"));
+            /*line.SetVertexCount(0);
             line.SetWidth(width, width);
-            line.SetColors(Color.green, Color.green);
+            line.SetColors(lineColor, lineColor);
             line.useWorldSpace = true;
+            line.sortingLayerName = "Default";
+            line.sortingOrder = 0;
+            */
             isMousePressed = false;
             pointsList = new List<Vector3>();
             marks = new List<GameObject>();
@@ -43,7 +49,7 @@ namespace DrawPOC1 {
                 isMousePressed = true;
                 line.SetVertexCount(0);
                 pointsList.RemoveRange(0, pointsList.Count);
-                line.SetColors(Color.green, Color.green);
+                //line.SetColors(lineColor, lineColor);
                 clearMarks();
             } else if (Input.GetMouseButtonUp(0)) {
                 isMousePressed = false;
