@@ -7,7 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DrawPOC1 {
+namespace KanjiDraw {
 
     public static class QuickMedian  {
 

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using NUnit.Framework;
 
-namespace DrawPOC1 {
+namespace KanjiDraw {
 
     [TestFixture]
     public class QuickMedianTest {

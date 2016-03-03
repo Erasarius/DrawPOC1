@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-namespace DrawPOC1 {
+namespace KanjiDraw {
 
     public static class ShortStraw {
         private const float INTERSPACING_CONSTANT = 40.0F;

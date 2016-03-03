@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace DrawPOC1 {
+namespace KanjiDraw {
     public class SpriteRepository {
         private Dictionary<string, Sprite> spriteDict;
 

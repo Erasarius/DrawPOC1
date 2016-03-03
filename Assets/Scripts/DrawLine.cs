@@ -6,40 +6,35 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace DrawPOC1 {
+namespace KanjiDraw {
 
     public class DrawLine : MonoBehaviour {
-        [SerializeField] private LineRenderer line;
+        [SerializeField] public KanjiBuilder kanjiBuilder;
+        private LineRenderer line;
         private bool isMousePressed;
         private List<Vector3> pointsList;
         private Vector3 mousePos;
         //List<Vector3> corners;
-        List<GameObject> marks;
-       // private Color lineColor = Color.red;
 
+        private Color lineColor = Color.red;
 
-        // Structure for line points
-        struct myLine {
-            public Vector3 StartPoint;
-            public Vector3 EndPoint;
-        };
         //	-----------------------------------	
         void Awake() {
             // Create line renderer component and set its property
-            float width = 0.05f;
+            //float width = 0.05f;
             line = gameObject.GetComponent<LineRenderer>();
             //line.material = new Material(Shader.Find("Particles/Additive"));
             //line.material = new Material(Shader.Find("Sprites/NewSurfaceShader"));
-            /*line.SetVertexCount(0);
-            line.SetWidth(width, width);
-            line.SetColors(lineColor, lineColor);
+            line.SetVertexCount(0);
+            //line.SetWidth(width, width);
+            //line.SetColors(lineColor, lineColor);
             line.useWorldSpace = true;
-            line.sortingLayerName = "Default";
-            line.sortingOrder = 0;
-            */
+            //line.sortingLayerName = "Default";
+            //line.sortingOrder = 0;
+            
             isMousePressed = false;
             pointsList = new List<Vector3>();
-            marks = new List<GameObject>();
+            
             //		renderer.material.SetTextureOffset(
         }
         //	-----------------------------------	
@@ -50,13 +45,17 @@ namespace DrawPOC1 {
                 line.SetVertexCount(0);
                 pointsList.RemoveRange(0, pointsList.Count);
                 //line.SetColors(lineColor, lineColor);
-                clearMarks();
+                if (kanjiBuilder != null) {
+                    kanjiBuilder.onStrokeBegin();
+                }
             } else if (Input.GetMouseButtonUp(0)) {
                 isMousePressed = false;
 
                 List<Vector3> corners = ShortStraw.getCornerPoints(pointsList);
 
-                markCorners(corners);
+                if (kanjiBuilder != null) {
+                    kanjiBuilder.onStrokeComplete(corners);
+                }
             }
             // Drawing line when mouse is moving(presses)
             if (isMousePressed) {
@@ -67,25 +66,6 @@ namespace DrawPOC1 {
                     line.SetVertexCount(pointsList.Count);
                     line.SetPosition(pointsList.Count - 1, (Vector3)pointsList[pointsList.Count - 1]);
                 }
-            }
-        }
-
-        private void clearMarks() {
-            foreach (GameObject mark in marks) {
-                Destroy(mark);
-            }
-        }
-
-        private void markCorners(List<Vector3> corners) {
-            float scale = 0.1F;
-            for (int i = 0; i < corners.Count; i++) {
-                Vector3 corner = corners[i]; 
-                GameObject mark = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                mark.transform.position = corner;
-                mark.transform.localScale = new Vector3(scale, scale, scale);
-                mark.GetComponent<Renderer>().material.SetColor("_SpecColor", Color.red);
-                this.marks.Add(mark);
-                Debug.Log(string.Format("{0},{1},{2}", i, corner.x, corner.y));
             }
         }
     }
