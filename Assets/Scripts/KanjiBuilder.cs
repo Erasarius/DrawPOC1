@@ -8,13 +8,16 @@ namespace KanjiDraw {
 
     public class KanjiBuilder : MonoBehaviour {
         private List<Vector3> corners;
-        [SerializeField] private List<List<Vector3>> charCorners;
+        //private List<List<Vector3>> charCorners;
+        private List<Vector3>[] charCorners;
         private List<GameObject> marks;
         [SerializeField] public Sprite markSprite;
         private SpriteRepository spriteRepo;
         private GDECharacterData charData;
         private string charKey = GDEItemKeys.Character_Three;
         private int curStroke = 0;
+        //private GameObject drawLine;
+        [SerializeField] public GameObject drawLineObj;
 
         // Use this for initialization
         void Start() {
@@ -26,7 +29,14 @@ namespace KanjiDraw {
 
             setSprite(charData.spriteNames[curStroke]);
 
-            charCorners = new List<List<Vector3>>();
+            charCorners = new List<Vector3>[charData.numStrokes];
+            if (charData.strokes.Count != 0) {
+                for (int i = 0; i < charData.strokes.Count; i++) {
+                    charCorners[i] = charData.strokes[i];
+                }
+            }
+            //charCorners = new List<List<Vector3>>(charData.numStrokes);
+            //drawLine = GameObject.Find("DrawLine");
         }
 
         // Update is called once per frame
@@ -40,24 +50,8 @@ namespace KanjiDraw {
             Messenger.AddListener(GameEvent.RESET_CHARACTER, onResetCharacter);
             Messenger.AddListener(GameEvent.SAVE_CHARACTER, onSaveCharacter);
             Messenger<bool>.AddListener(GameEvent.VIEW_CORNERS, onViewCorners);
-        }
-
-        public void onStrokeBegin() {
-            clearMarks();
-        }
-
-        public void onStrokeComplete(List<Vector3> points) {
-
-            this.corners = ShortStraw.getCornerPoints(points);
-            markCorners(corners);
-            //charCorners[curStroke] = corners; // FIXME
-            Debug.Log("Stroke Complete!");
-        }
-
-        private void onResetCharacter() {
-            charCorners.Clear();
-            curStroke = 0;
-            setSprite(charData.spriteNames[curStroke]);
+            Messenger.AddListener(GameEvent.STROKE_COMPLETE, onStrokeComplete);
+            Messenger.AddListener(GameEvent.STROKE_BEGIN, onStrokeBegin);
         }
 
         void OnDestroy() {
@@ -66,10 +60,35 @@ namespace KanjiDraw {
             Messenger.RemoveListener(GameEvent.RESET_CHARACTER, onResetCharacter);
             Messenger.RemoveListener(GameEvent.SAVE_CHARACTER, onSaveCharacter);
             Messenger<bool>.RemoveListener(GameEvent.VIEW_CORNERS, onViewCorners);
+            Messenger.RemoveListener(GameEvent.STROKE_COMPLETE, onStrokeComplete);
+            Messenger.RemoveListener(GameEvent.STROKE_BEGIN, onStrokeBegin);
+        }
+
+        public void onStrokeBegin() {
+            clearMarks();
+        }
+
+        public void onStrokeComplete() {
+            DrawLine script = drawLineObj.GetComponent<DrawLine>();
+            List<Vector3> points = script.getPointsList();
+            this.corners = ShortStraw.getCornerPoints(points);
+            markCorners(corners);
+            charCorners[curStroke] = corners; // FIXME
+            Debug.Log("Stroke Complete!");
+        }
+
+        private void onResetCharacter() {
+            corners = new List<Vector3>();
+            charCorners = new List<Vector3>[charData.numStrokes];
+            curStroke = 0;
+            setSprite(charData.spriteNames[curStroke]);
+            clearMarks();
+            DrawLine script = drawLineObj.GetComponent<DrawLine>();
+            script.clearLine();
         }
 
         private void onSaveCharacter() {
-            charData.strokes = charCorners;
+            charData.strokes = new List<List<Vector3>>(charCorners);
             charData.Set_strokes();
             GDEDataManager.Save();
             GDEDataManager.SaveToDisk();
@@ -82,12 +101,15 @@ namespace KanjiDraw {
         private void onNextStroke() {
             curStroke = (curStroke + 1) % charData.numStrokes;
             setSprite(charData.spriteNames[curStroke]);
+            charCorners[curStroke] = corners;
         }
 
         private void onViewCorners(bool viewCorners) {
             clearMarks();
 
             if (viewCorners) {
+                curStroke = charData.numStrokes - 1;
+                setSprite(charData.spriteNames[curStroke]);
                 foreach (List<Vector3> strokeCorners in charCorners) {
                     markCorners(strokeCorners);
                 }
@@ -120,7 +142,7 @@ namespace KanjiDraw {
                 SpriteRenderer renderer = newMark.AddComponent<SpriteRenderer>();
                 renderer.sprite = markSprite;
 
-                newMark.transform.position = corners[i];
+                newMark.transform.position = new Vector3(corners[i].x, corners[i].y, SceneDepth.LINE_DEPTH);
 
                 marks.Add(newMark);
             }

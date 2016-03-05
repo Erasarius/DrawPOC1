@@ -9,12 +9,12 @@ using System.Collections.Generic;
 namespace KanjiDraw {
 
     public class DrawLine : MonoBehaviour {
-        [SerializeField] public KanjiBuilder kanjiBuilder;
+        //[SerializeField] public KanjiBuilder kanjiBuilder;
         private LineRenderer line;
-        private bool isMousePressed;
         private List<Vector3> pointsList;
         private Vector3 mousePos;
-        private bool mouseOver = false;
+        private bool enableDraw;
+        private const int MAX_LINE_SIZE = 500;
         //private Event
         //List<Vector3> corners;
 
@@ -33,9 +33,9 @@ namespace KanjiDraw {
             line.useWorldSpace = true;
             //line.sortingLayerName = "Default";
             //line.sortingOrder = 0;
-            
-            isMousePressed = false;
-            pointsList = new List<Vector3>();
+
+            enableDraw = false;
+            pointsList = new List<Vector3>(MAX_LINE_SIZE);
             
             //		renderer.material.SetTextureOffset(
         }
@@ -76,15 +76,66 @@ namespace KanjiDraw {
         }
 
         public void onPointerEnter() {
-            Debug.Log("Pointer enter");
+            //Debug.Log("Pointer enter");
+            enableDraw = true;
         }
 
         public void onPointerExit() {
-            Debug.Log("Pointer exit");
+            //Debug.Log("Pointer exit");
+            enableDraw = false;
         }
 
         public void onDrag() {
-            Debug.Log("Drag");
+            //Debug.Log("On Drag");
+            if (enableDraw && pointsList.Count <= MAX_LINE_SIZE) {
+                mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                //SceneDepths.LINE_DEPTH;
+                pointsList.Add(new Vector3(mousePos.x, mousePos.y, 0));
+                mousePos.z = SceneDepth.LINE_DEPTH;
+                line.SetVertexCount(pointsList.Count);
+                //line.SetPosition(pointsList.Count - 1, (Vector3)pointsList[pointsList.Count - 1]);
+                line.SetPosition(pointsList.Count - 1, mousePos);
+                /*
+                if (!pointsList.Contains(mousePos)) {
+                    pointsList.Add(mousePos);
+                    line.SetVertexCount(pointsList.Count);
+                    line.SetPosition(pointsList.Count - 1, (Vector3)pointsList[pointsList.Count - 1]);
+                }
+                */
+            }
+        }
+
+        public void clearLine() {
+            line.SetVertexCount(0);
+            //pointsList.RemoveRange(0, pointsList.Count);
+            pointsList.Clear();
+        }
+
+        public void onBeginDrag() {
+            //Debug.Log("Begin Drag");
+
+            enableDraw = true;
+            clearLine();
+            Messenger.Broadcast(GameEvent.STROKE_BEGIN);
+            //line.SetColors(lineColor, lineColor);
+            //if (kanjiBuilder != null) {
+            //    kanjiBuilder.onStrokeBegin();
+            //}
+        }
+
+        public void onEndDrag() {
+            //Debug.Log("End Drag");
+            Messenger.Broadcast(GameEvent.STROKE_COMPLETE);
+
+            //List<Vector3> corners = ShortStraw.getCornerPoints(pointsList);
+
+            //if (kanjiBuilder != null) {
+                //kanjiBuilder.onStrokeComplete(pointsList);
+            //}
+        }
+
+        public List<Vector3> getPointsList() {
+            return pointsList;
         }
     }
 };
