@@ -14,6 +14,8 @@ namespace KanjiDraw {
         private bool isMousePressed;
         private List<Vector3> pointsList;
         private Vector3 mousePos;
+        private bool mouseOver = false;
+        //private Event
         //List<Vector3> corners;
 
         private Color lineColor = Color.red;
@@ -39,6 +41,8 @@ namespace KanjiDraw {
         }
         //	-----------------------------------	
         void Update() {
+
+            /*
             // If mouse button down, remove old line and set its color to green
             if (Input.GetMouseButtonDown(0)) {
                 isMousePressed = true;
@@ -60,13 +64,27 @@ namespace KanjiDraw {
             // Drawing line when mouse is moving(presses)
             if (isMousePressed) {
                 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                mousePos.z = 0;
+                mousePos.z = -10;
                 if (!pointsList.Contains(mousePos)) {
                     pointsList.Add(mousePos);
                     line.SetVertexCount(pointsList.Count);
                     line.SetPosition(pointsList.Count - 1, (Vector3)pointsList[pointsList.Count - 1]);
                 }
             }
+            */
+
+        }
+
+        public void onPointerEnter() {
+            Debug.Log("Pointer enter");
+        }
+
+        public void onPointerExit() {
+            Debug.Log("Pointer exit");
+        }
+
+        public void onDrag() {
+            Debug.Log("Drag");
         }
     }
 };
