@@ -12,7 +12,7 @@ public class Recognizer {
 
     }
 
-    public StrokeScore getResults(List<Vector3> userStroke, List<Vector3> targetStroke, bool hasFlag) {
+    public StrokeScore getResults(List<Vector3> userStroke, List<Vector3> targetStroke, bool hasFlag = false) {
         StrokeScore strokeScore = new StrokeScore();
 
         strokeScore.Angle = checkAngle(userStroke, targetStroke);

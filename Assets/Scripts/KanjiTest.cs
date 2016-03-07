@@ -23,6 +23,7 @@ namespace KanjiDraw {
         [SerializeField] public bool showPromptTotal = true;
         [SerializeField] public float promptAlpha = 0.5f;
         [SerializeField] public bool showMarks;
+        [SerializeField] public float strokeMarkDelay = 0.3f;
         private Vector3 center;
 
         // Use this for initialization
@@ -47,6 +48,8 @@ namespace KanjiDraw {
             if (showPromptTotal) {
                 doPromptTotal();
             }
+
+            StartCoroutine(displayStrokeHint(curStroke));
         }
 
         // Update is called once per frame
@@ -72,6 +75,7 @@ namespace KanjiDraw {
             DrawLine script = drawLineObj.GetComponent<DrawLine>();
             List<Vector3> points = script.getPointsList();
             this.corners = ShortStraw.getCornerPoints(points);
+            script.clearLine();
 
             if (showMarks) {
                 markCorners(corners);
@@ -79,16 +83,66 @@ namespace KanjiDraw {
 
             charCorners[curStroke] = corners; // FIXME
             Debug.Log("Stroke Complete!");
-            foreach (Vector3 corner in corners) {
-                Debug.Log(string.Format("    {0}, {1}, {2}", corner.x, corner.y, corner.z));
-            }
+            //foreach (Vector3 corner in corners) {
+            //    Debug.Log(string.Format("    {0}, {1}, {2}", corner.x, corner.y, corner.z));
+            //}
+
+            Recognizer recognizer = new Recognizer();
+            StrokeScore score = recognizer.getResults(corners, charData.strokes[curStroke]);
+
+            Debug.Log(string.Format("    *** {0} *** angle: {1}, corners: {2}, dist: {3}", 
+                score.Pass ? "Pass" : "Fail", score.Angle, score.Corners, score.Distance));
 
             // show sprite stroke for the just completed stroke
-            if (curStroke < charData.numStrokes) {
-                setSprite(charData.spriteNames[curStroke]);
-                script.clearLine();
+            if (score.Pass) {
+                setStrokeSprite(charData.spriteNames[curStroke]);
+                curStroke++;
             }
-            curStroke++;
+
+            if (curStroke >= charData.numStrokes) {
+                // the character is complete, back out of scene
+                Debug.Log("Character complete!");
+                curStroke--;
+            } else {
+                StartCoroutine(displayStrokeHint(curStroke));
+            }
+
+        }
+
+        private IEnumerator displayStrokeHint(int strokeNum) {
+            List<Vector3> targetCorners = charData.strokes[strokeNum];
+
+            yield return new WaitForSeconds(strokeMarkDelay);
+
+            // display the completed next stroke
+            GameObject strokeHint = new GameObject("Stroke Hint");
+            SpriteRenderer strokeHintRenderer = strokeHint.AddComponent<SpriteRenderer>();
+            strokeHintRenderer.transform.position = new Vector3(0f, 0f, -5f);
+
+            string spriteName = charData.spriteNames[strokeNum];
+            strokeHintRenderer.sprite = spriteRepo.getSprite(spriteName);
+            strokeHintRenderer.color = Color.black;
+
+            // wait a moment
+            yield return new WaitForSeconds(strokeMarkDelay);
+
+            GameObject mark = new GameObject();
+            SpriteRenderer renderer = mark.AddComponent<SpriteRenderer>();
+            renderer.sprite = markSprite;
+
+            // display the corner points in order, pausing along the way
+            // to indicate stroke direction
+            for (int i = 0; i < targetCorners.Count; i++) {
+                mark.transform.position = 
+                    new Vector3(targetCorners[i].x, targetCorners[i].y, SceneDepth.LINE_DEPTH);
+
+                yield return new WaitForSeconds(strokeMarkDelay);
+            }
+
+            // destory the mark, wait a moment, then destroy the stroke hint
+            Destroy(mark);
+            yield return new WaitForSeconds(strokeMarkDelay);
+            Destroy(strokeHint);
         }
 
 
@@ -128,9 +182,16 @@ namespace KanjiDraw {
             }
         }
 
-        private void setSprite(string name) {
-            Sprite sprite = spriteRepo.getSprite(name);
-            GetComponent<SpriteRenderer>().sprite = sprite;
+        private void setStrokeSprite(string name) {
+            Sprite sprite;
+            if (name == null) {
+                sprite = null;
+            } else {
+                sprite = spriteRepo.getSprite(name);
+            }
+            SpriteRenderer renderer = GetComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.color = Color.black;
         }
 
         /// <summary>
@@ -142,7 +203,8 @@ namespace KanjiDraw {
             string spriteName = charData.spriteNames[charData.spriteNames.Count - 1];
             SpriteRenderer renderer = promptTotalObj.AddComponent<SpriteRenderer>();
             renderer.sprite = spriteRepo.getSprite(spriteName);
-            renderer.color = new Color(1f, 1f, 1f, promptAlpha);
+            //renderer.color = Color.black;
+            renderer.color = new Color(0f, 0f, 0f, promptAlpha);
 
             promptTotalObj.transform.position = center;
         }
